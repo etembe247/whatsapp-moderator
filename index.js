@@ -32,16 +32,18 @@ const question = (query) => new Promise((resolve) => rl.question(query, resolve)
 
 // Initialize Client using Windows built-in Microsoft Edge to bypass internet download e
 // Optimized to dynamically locate the downloaded Chrome bundle on Render Cloud Linux
+// Configured to point directly to Render's persistent project container storage
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        // REMOVED manual executablePath so Puppeteer finds its downloaded cache automatically
+        // CRUCIAL: Pointing directly to the download cache folder we created on Render
+        executablePath: '/opt/render/project/src/.puppeteer_cache/chrome/linux-146.0.7680.31/chrome-linux64/chrome',
         args: [
             '--no-sandbox', 
             '--disable-setuid-sandbox',
             '--disable-gpu',
-            '--disable-dev-shm-usage', // Added to prevent Linux memory crashes on free host tiers
+            '--disable-dev-shm-usage',
             '--disable-blink-features=AutomationControlled', 
             '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         ]
