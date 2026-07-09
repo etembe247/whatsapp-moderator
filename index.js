@@ -1,17 +1,18 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const axios = require('axios');
 const FormData = require('form-data');
-const readline = require('readline'); // Built-in Node library to ask for your phone number
 
 // SETUP CONFIGURATION
 const SIGHTENGINE_USER_ID = 'YOUR_SIGHTENGINE_USER_ID'; 
 const SIGHTENGINE_SECRET = 'YOUR_SIGHTENGINE_SECRET';
 
-// YOUR CUSTOM HIGH-PRIORITY BANNED WORDS
+// CLOUD COMPATIBLE ENV RETRIEVAL (Bypasses terminal prompt freeze)
+const PHONE_NUMBER = process.env.BOT_PHONE_NUMBER;
+
 const CUSTOM_BANNED_WORDS = [
     'mad', 'stupid', 'crazy', 'idiot', 'bastered', 'bastard', 
     'kill', 'die', 'fuck', 'sex', 'bitch', 'asshole', 'dick', 'pussy',
-    'mama', 'kpai', 'opueh', 'toto', 'short','mumu', 'silly', 'fool', 'dumb', 'loser', 'jerk', 'moron',``
+    'mama', 'kpai', 'opueh', 'toto', 'short'
 ];
 
 const BANNED_WORDS_SET = new Set();
@@ -22,22 +23,11 @@ const MAX_DELAY = 3500;
 const RATE_LIMIT_COOLDOWN = 4000; 
 let lastActionTime = 0;
 
-// Set up readline interface to capture phone number safely via console
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-const question = (query) => new Promise((resolve) => rl.question(query, resolve));
-
-// Initialize Client using Windows built-in Microsoft Edge to bypass internet download e
-// Optimized to dynamically locate the downloaded Chrome bundle on Render Cloud Linux
-// Configured to point directly to Render's persistent project container storage
+// Initialize Client mapped to Render project cache container
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        // CRUCIAL: Pointing directly to the download cache folder we created on Render
         executablePath: '/opt/render/project/src/.puppeteer_cache/chrome/linux-146.0.7680.31/chrome-linux64/chrome',
         args: [
             '--no-sandbox', 
@@ -50,8 +40,7 @@ const client = new Client({
     }
 });
 
-
-// Helper function to load massive dictionaries
+// Helper function to pull massive dictionaries
 async function loadMassiveWordDatabase() {
     console.log('🔄 Loading 18+ adult database into memory...');
     CUSTOM_BANNED_WORDS.forEach(word => BANNED_WORDS_SET.add(word.toLowerCase()));
@@ -78,17 +67,16 @@ async function loadMassiveWordDatabase() {
 
 const humanDelay = (ms) => new Promise(res => setTimeout(res, ms));
 
-// TRIGGER TEXT CODE PAIRING LOGIC INSTEAD OF PRINTING QR
+// CLOUD-AUTOMATED PAIRING CODE LOGIC
 client.on('qr', async (qr) => {
-    // Stop the QR code from displaying and request phone authentication instead
-    console.log('\n📱 WhatsApp is requesting authentication.');
-    
-    // Prompt the user in the terminal
-    const phoneNumber = await question('👉 Enter the bot\'s phone number (with country code, e.g., 2348012345678): ');
-    
+    if (!PHONE_NUMBER) {
+        console.error('❌ CRITICAL ERROR: BOT_PHONE_NUMBER environment variable is completely missing on Render settings dashboard!');
+        return;
+    }
+
     try {
-        console.log('🔄 Requesting an 8-character pairing code from WhatsApp servers...');
-        const pairingCode = await client.requestPairingCode(phoneNumber);
+        console.log(`🔄 Automated Request: Fetching pairing code for system connection to: ${PHONE_NUMBER}...`);
+        const pairingCode = await client.requestPairingCode(PHONE_NUMBER);
         
         console.log('\n=============================================');
         console.log(`🔑 YOUR WHATSAPP PAIRING CODE IS: ${pairingCode}`);
@@ -96,7 +84,7 @@ client.on('qr', async (qr) => {
         console.log('Follow these instructions on your phone right now:');
         console.log('1. Open WhatsApp -> Settings -> Linked Devices.');
         console.log('2. Tap "Link a Device".');
-        console.log('3. At the bottom of the camera screen, tap "Link with phone number instead".');
+        console.log('3. Tap "Link with phone number instead".');
         console.log(`4. Enter the code displayed above: ${pairingCode}\n`);
     } catch (err) {
         console.error('❌ Failed to retrieve pairing code from WhatsApp:', err.message);
@@ -104,8 +92,7 @@ client.on('qr', async (qr) => {
 });
 
 client.on('ready', () => {
-    console.log('\n🤖 SUCCESS: Stealth Moderator Bot is fully connected and active!\n');
-    rl.close();
+    console.log('\n🤖 SUCCESS: Stealth Moderator Bot is fully connected and active on Render Cloud!\n');
 });
 
 // Primary group scanning listener
