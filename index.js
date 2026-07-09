@@ -30,20 +30,24 @@ const rl = readline.createInterface({
 
 const question = (query) => new Promise((resolve) => rl.question(query, resolve));
 
-// Initialize Client using Windows built-in Microsoft Edge to bypass internet download errors
+// Initialize Client using Windows built-in Microsoft Edge to bypass internet download e
+// Optimized to dynamically locate the downloaded Chrome bundle on Render Cloud Linux
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+        // REMOVED manual executablePath so Puppeteer finds its downloaded cache automatically
         args: [
             '--no-sandbox', 
             '--disable-setuid-sandbox',
+            '--disable-gpu',
+            '--disable-dev-shm-usage', // Added to prevent Linux memory crashes on free host tiers
             '--disable-blink-features=AutomationControlled', 
-            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         ]
     }
 });
+
 
 // Helper function to load massive dictionaries
 async function loadMassiveWordDatabase() {
